@@ -31,3 +31,6 @@ lerna-debug.log*
 
 # misc
 .DS_Store
+
+# local seed extraction working files (source data lives in migrations/0002_seed_data.sql)
+data_extract/
