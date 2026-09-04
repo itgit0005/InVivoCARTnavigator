@@ -22,11 +22,12 @@ function toCsv(rows: Record<string, any>[]): string {
   return lines.join('\n');
 }
 
-exportRoutes.get('/:module.csv', async (c) => {
+exportRoutes.get('/:moduleParam', async (c) => {
   const user = c.get('user') as AuthUser;
   if (!canExport(user)) return c.json({ error: 'Export is not available for your account.' }, 403);
 
-  const module = c.req.param('module') as ModuleName;
+  const rawParam = c.req.param('moduleParam') || '';
+  const module = rawParam.replace(/\.csv$/i, '') as ModuleName;
   if (!MODULES.includes(module)) return c.json({ error: 'Unknown module.' }, 400);
 
   const monthParam = c.req.query('month');

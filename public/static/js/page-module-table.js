@@ -1,3 +1,48 @@
+// ---------- Per-module display configuration for the platform-style record list ----------
+// title/subtitle drive the left identity block; badgeField renders a colored status chip;
+// keyFields render as compact label/value columns. Everything else is still fully available
+// in the detail modal (click a row) — nothing from the underlying data is hidden, just
+// de-emphasized from the scan view.
+const MODULE_DISPLAY_CONFIG = {
+  company_intelligence: {
+    title: 'Company', subtitle: 'HQ', badgeField: 'Development Stage',
+    keyFields: ['Core In Vivo Platform', 'Lead Asset', 'Delivery Modality'],
+  },
+  pipeline_dashboard: {
+    title: 'Asset Name', subtitle: 'Company', badgeField: 'Development Stage',
+    keyFields: ['Target Antigen', 'Delivery Technology', 'Primary Indication'],
+  },
+  technology_intelligence: {
+    title: 'Delivery Class', subtitle: 'Representative Asset', badgeField: null,
+    keyFields: ['Companies', 'Payload Persistence', 'Key Advantage(s) Claimed'],
+  },
+  target_landscape: {
+    title: 'Target Antigen', subtitle: 'Disease Category', badgeField: 'Phase (most advanced)',
+    keyFields: ['# Companies Targeting (named)', 'Companies', 'White Space Note'],
+  },
+  bdl_intelligence: {
+    title: 'Acquirer / Partner', subtitle: 'Target Company', badgeField: 'Deal Type',
+    keyFields: ['Announcement Date', 'Upfront', 'Total Deal Value (incl. milestones)'],
+  },
+  funding_investment: {
+    title: 'Company', subtitle: 'Round', badgeField: 'Status',
+    keyFields: ['Date', 'Amount', 'Lead / Notable Investors'],
+  },
+  competitive_intelligence: {
+    title: 'Company', subtitle: 'Strategic Camp', badgeField: null,
+    keyFields: ['Delivery Platform', 'Clinical Progress', 'Manufacturing Readiness'],
+  },
+  clinical_trial_dashboard: {
+    title: 'Trial / Asset', subtitle: 'Sponsor', badgeField: 'Status',
+    keyFields: ['Phase', 'Geography', 'Key Milestone Date'],
+  },
+  regulatory_dashboard: {
+    title: 'Company / Asset', subtitle: 'Agency', badgeField: 'Event Class',
+    keyFields: ['Designation / Interaction', 'Date', 'Indication'],
+  },
+};
+
+// Full field order shown in the detail modal (all columns from the original config, in order).
 const MODULE_COLUMN_CONFIG = {
   company_intelligence: ['Company', 'HQ', 'Company Type / Status', 'Core In Vivo Platform', 'Delivery Modality', 'Lead Asset', 'Development Stage', 'Therapeutic Focus', 'Acquirer / Partner', 'Deal Value'],
   pipeline_dashboard: ['Asset Name', 'Company', 'Target Antigen', 'Delivery Technology', 'Vector / Payload', 'Primary Indication', 'Disease Category', 'Development Stage', 'Trial Status / Notes'],
@@ -25,21 +70,27 @@ async function renderModuleTablePage(container, module) {
     const v = data.version;
     container.appendChild(versionBanner(v));
 
-    const toolbar = h('div', { class: 'flex items-center justify-between mb-4' }, [
-      h('div', { class: 'text-sm text-slate-600' }, `${data.count} records`),
+    const toolbar = h('div', { class: 'toolbar-card' }, [
+      h('div', { class: 'flex items-center gap-3' }, [
+        h('div', { class: 'w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center' }, h('i', { class: 'fa-solid fa-table-list text-xs' })),
+        h('div', {}, [
+          h('div', { class: 'text-sm font-bold text-slate-800' }, `${data.count} records`),
+          h('div', { class: 'text-[11px] text-slate-400' }, 'Click any row to view full details & sources'),
+        ]),
+      ]),
       h('div', { class: 'flex items-center gap-2' }, [
-        searchBox((q) => filterTable(module, q)),
+        searchBox((q) => filterRecordList(module, q)),
         canExportRole() ? h('button', { class: 'btn btn-secondary', onclick: () => downloadCsv(module, STATE.currentMonth) }, [h('i', { class: 'fa-solid fa-download' }), 'Export CSV']) : null,
       ]),
     ]);
     container.appendChild(toolbar);
 
+    const cfg = MODULE_DISPLAY_CONFIG[module] || {};
     const cols = MODULE_COLUMN_CONFIG[module] || Object.keys(data.rows[0] || {}).filter((k) => k !== 'record_key' && k !== '__meta' && !k.includes('URL'));
     const urlFields = MODULE_URL_FIELDS[module] || MODULE_URL_FIELDS.default;
 
-    const wrap = h('div', { class: 'kpi-card overflow-x-auto', id: `table-wrap-${module}` });
-    const table = buildDataTable(cols, data.rows, urlFields);
-    wrap.appendChild(table);
+    const wrap = h('div', { id: `table-wrap-${module}` });
+    wrap.appendChild(buildRecordList(module, cfg, cols, data.rows, urlFields));
     container.appendChild(wrap);
   } catch (e) {
     renderError(container, e.message);
@@ -58,52 +109,101 @@ function versionBanner(v) {
 }
 
 function searchBox(onInput) {
-  const input = h('input', { type: 'text', placeholder: 'Search...', class: 'text-sm border border-slate-300 rounded-lg px-3 py-1.5 w-56' });
+  const wrap = h('div', { class: 'search-input-wrap' });
+  wrap.appendChild(h('i', { class: 'fa-solid fa-magnifying-glass' }));
+  const input = h('input', { type: 'text', placeholder: 'Search records...', class: 'search-input text-sm border border-slate-300 rounded-lg px-3 py-1.5 w-64' });
   input.addEventListener('input', () => onInput(input.value));
-  return input;
+  wrap.appendChild(input);
+  return wrap;
 }
 
-function buildDataTable(cols, rows, urlFields) {
-  const [primField, indField] = urlFields;
+// Maps free-text stage/status values to a colored chip class family.
+function stageChipClass(value) {
+  const v = (value || '').toLowerCase();
+  if (!v) return 'stage-other';
+  if (v.includes('acquired') || v.includes('completed') || v.includes('approved')) return 'stage-acquired';
+  if (v.startsWith('phase 1/2') || v.includes('phase 2') || v.includes('phase ii')) return 'stage-phase12plus';
+  if (v.startsWith('phase 1') || v.includes('phase i')) return 'stage-phase1';
+  if (v.includes('ind') || v.includes('active') || v.includes('ongoing') || v.includes('recruiting')) return 'stage-ind';
+  if (v.includes('preclinical') || v.includes('discovery') || v.includes('independent')) return 'stage-preclinical';
+  return 'stage-other';
+}
 
-  const table = h('table', { class: 'data-table' });
-  const thead = h('thead', {}, h('tr', {}, [
-    ...cols.map((c) => h('th', {}, c)),
-    h('th', {}, 'Source 1'),
-    h('th', {}, 'Source 2'),
-    h('th', {}, 'Confidence'),
-  ]));
-  table.appendChild(thead);
-  const tbody = h('tbody', { id: 'tbody-search-target' });
+function buildRecordList(module, cfg, cols, rows, urlFields) {
+  const [primField, indField] = urlFields;
+  const titleField = cfg.title || cols[0];
+  const subtitleField = cfg.subtitle || cols[1];
+  const keyFields = cfg.keyFields || cols.slice(2, 5);
+  const gridCols = `minmax(200px,1.5fr) ${keyFields.map(() => 'minmax(110px,1fr)').join(' ')} auto auto 1.25rem`;
+
+  const list = h('div', { class: 'record-list' });
+
+  // Column header row
+  const headRow = h('div', { class: 'record-list-head', style: `grid-template-columns:${gridCols};` });
+  headRow.appendChild(h('div', {}, titleField || 'Record'));
+  keyFields.forEach((f) => headRow.appendChild(h('div', {}, f)));
+  headRow.appendChild(h('div', {}, cfg.badgeField ? 'Stage' : ''));
+  headRow.appendChild(h('div', {}, 'Confidence'));
+  headRow.appendChild(h('div', {}));
+  list.appendChild(headRow);
+
   rows.forEach((row) => {
     const meta = row.__meta || {};
-    const tr = h('tr', {});
-    cols.forEach((c) => tr.appendChild(h('td', {}, truncateCell(row[c]))));
-    const primUrl = row[primField] || meta.primary_source_url;
-    const indUrl = row[indField] || meta.independent_source_url;
-    tr.appendChild(h('td', {}, h('span', { html: sourceLink(primUrl, 'Source 1') })));
-    tr.appendChild(h('td', {}, h('span', { html: sourceLink(indUrl, 'Source 2') })));
-    tr.appendChild(h('td', {}, h('span', { html: confidenceBadge(meta.confidence_level) })));
-    tbody.appendChild(tr);
+    const title = row[titleField] || '—';
+    const subtitle = subtitleField ? row[subtitleField] : null;
+
+    const tr = h('div', { class: 'record-row', style: `grid-template-columns:${gridCols};`, 'data-search': JSON.stringify(row).toLowerCase() });
+
+    tr.appendChild(h('div', { class: 'flex items-center gap-3 min-w-0' }, [
+      h('div', { class: 'record-avatar' }, initials(title)),
+      h('div', { class: 'min-w-0' }, [
+        h('div', { class: 'record-title truncate' }, truncateText(title, 46)),
+        subtitle ? h('div', { class: 'record-subtitle truncate' }, truncateText(String(subtitle), 50)) : null,
+      ]),
+    ]));
+
+    keyFields.forEach((f) => {
+      const val = row[f];
+      tr.appendChild(h('div', { class: 'min-w-0' }, [
+        h('div', { class: 'record-field-value truncate' }, val !== null && val !== undefined && val !== '' ? truncateText(String(val), 34) : '—'),
+      ]));
+    });
+
+    tr.appendChild(h('div', {}, cfg.badgeField && row[cfg.badgeField] ? h('span', { class: 'stage-chip ' + stageChipClass(row[cfg.badgeField]) }, truncateText(String(row[cfg.badgeField]), 22)) : null));
+    tr.appendChild(h('div', {}, h('span', { html: confidenceBadge(meta.confidence_level) })));
+    tr.appendChild(h('div', { class: 'text-slate-300 text-center' }, h('i', { class: 'fa-solid fa-chevron-right text-xs' })));
+
+    tr.addEventListener('click', () => {
+      const primUrl = row[primField] || meta.primary_source_url;
+      const indUrl = row[indField] || meta.independent_source_url;
+      openRecordDetailModal({
+        title,
+        subtitle: subtitle ? String(subtitle) : (MODULE_LABEL_MAP && MODULE_LABEL_MAP[module]) || '',
+        avatarText: title,
+        fields: cols.map((c) => [c, row[c]]),
+        sources: [{ url: primUrl, label: 'Source 1' }, { url: indUrl, label: 'Source 2' }],
+        meta,
+      });
+    });
+
+    list.appendChild(tr);
   });
-  table.appendChild(tbody);
-  return table;
+
+  return list;
 }
 
-function truncateCell(v) {
-  if (v === null || v === undefined) return '—';
-  const s = String(v);
-  if (s.length <= 90) return s;
-  const span = h('span', { title: s }, s.slice(0, 87) + '...');
-  return span;
+function truncateText(s, n) {
+  if (s === null || s === undefined) return '—';
+  const str = String(s);
+  return str.length > n ? str.slice(0, n - 1) + '…' : str;
 }
 
-function filterTable(module, query) {
+function filterRecordList(module, query) {
   const wrap = document.getElementById(`table-wrap-${module}`);
   if (!wrap) return;
   const q = query.toLowerCase();
-  wrap.querySelectorAll('tbody tr').forEach((tr) => {
-    const text = tr.textContent.toLowerCase();
-    tr.style.display = text.includes(q) ? '' : 'none';
+  wrap.querySelectorAll('.record-row').forEach((row) => {
+    const text = row.getAttribute('data-search') || '';
+    row.style.display = text.includes(q) ? '' : 'none';
   });
 }

@@ -74,6 +74,71 @@ function renderError(container, message) {
   );
 }
 
+function initials(name) {
+  if (!name) return '?';
+  const parts = String(name).trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+// Opens a detail modal showing every field of a record plus its two sources + confidence.
+// fields: array of [label, value] pairs to render in order.
+// urlFields: [{ url, label }] to render as source buttons.
+function openRecordDetailModal(opts) {
+  const { title, subtitle, avatarText, fields, sources, meta } = opts;
+  const overlay = h('div', { class: 'detail-modal-overlay' });
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+
+  const modal = h('div', { class: 'detail-modal' });
+
+  const head = h('div', { class: 'detail-modal-head' }, [
+    h('div', { class: 'flex items-start gap-3 min-w-0' }, [
+      h('div', { class: 'record-avatar', style: 'width:2.75rem;height:2.75rem;font-size:.85rem;flex-shrink:0;' }, initials(avatarText || title)),
+      h('div', { class: 'min-w-0' }, [
+        h('div', { class: 'text-base font-bold text-slate-900 leading-tight' }, title || 'Record'),
+        subtitle ? h('div', { class: 'text-xs text-slate-500 mt-1' }, subtitle) : null,
+      ]),
+    ]),
+    h('button', { class: 'icon-btn', onclick: () => overlay.remove() }, h('i', { class: 'fa-solid fa-xmark' })),
+  ]);
+  modal.appendChild(head);
+
+  const body = h('div', { class: 'detail-modal-body' });
+
+  if (meta && (meta.confidence_level || meta.validation_status)) {
+    const metaRow = h('div', { class: 'flex items-center gap-2 mb-4' });
+    if (meta.confidence_level) metaRow.appendChild(h('span', { html: confidenceBadge(meta.confidence_level) }));
+    if (meta.validation_status) metaRow.appendChild(h('span', { html: validationBadge(meta.validation_status) }));
+    if (meta.verification_date) metaRow.appendChild(h('span', { class: 'text-xs text-slate-400' }, `Verified ${fmtDate(meta.verification_date)}`));
+    body.appendChild(metaRow);
+  }
+
+  (fields || []).forEach(([label, value]) => {
+    if (value === null || value === undefined || value === '') return;
+    body.appendChild(h('div', { class: 'detail-field' }, [
+      h('div', { class: 'detail-field-label' }, label),
+      h('div', { class: 'detail-field-value' }, String(value)),
+    ]));
+  });
+
+  const srcRow = h('div', { class: 'detail-source-row' });
+  (sources || []).forEach((s) => {
+    if (s.url) {
+      srcRow.appendChild(h('a', { href: s.url, target: '_blank', rel: 'noopener', class: 'detail-source-btn' }, [
+        h('i', { class: 'fa-solid fa-arrow-up-right-from-square' }), s.label,
+      ]));
+    } else {
+      srcRow.appendChild(h('span', { class: 'detail-source-btn muted' }, [h('i', { class: 'fa-solid fa-ban' }), `${s.label}: not disclosed`]));
+    }
+  });
+  if ((sources || []).length) body.appendChild(srcRow);
+
+  modal.appendChild(body);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+}
+
 function downloadCsv(module, month) {
   const params = month ? `?month=${encodeURIComponent(month)}` : '';
   const url = `/api/export/${module}.csv${params}`;

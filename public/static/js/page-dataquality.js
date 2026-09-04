@@ -7,36 +7,41 @@ async function renderDataQualityPage(container) {
     container.appendChild(versionBanner(data.version));
 
     const t = data.totals;
-    container.appendChild(sectionTitle('Validation Status Across All Records'));
+    container.appendChild(sectionTitle('fa-shield-halved', 'Validation Status Across All Records'));
     container.appendChild(kpiGrid([
-      { label: 'Total Records', value: t.totalRecords, icon: 'fa-database' },
-      { label: 'Verified (Source 1 + Source 2)', value: t.verified, icon: 'fa-circle-check' },
-      { label: 'Pending Secondary Source', value: t.pendingSecondary, icon: 'fa-hourglass-half' },
-      { label: 'Unverified', value: t.unverified, icon: 'fa-circle-question' },
+      { label: 'Total Records', value: t.totalRecords, icon: 'fa-database', tone: 'blue' },
+      { label: 'Verified (Source 1 + Source 2)', value: t.verified, icon: 'fa-circle-check', tone: 'green' },
+      { label: 'Pending Secondary Source', value: t.pendingSecondary, icon: 'fa-hourglass-half', tone: 'amber' },
+      { label: 'Unverified', value: t.unverified, icon: 'fa-circle-question', tone: 'rose' },
     ]));
 
-    container.appendChild(sectionTitle('Confidence Level Distribution'));
+    container.appendChild(sectionTitle('fa-chart-pie', 'Confidence Level Distribution'));
     const chartsRow = h('div', { class: 'grid grid-cols-1 lg:grid-cols-2 gap-5' });
-    chartsRow.appendChild(h('div', { class: 'kpi-card' }, [h('canvas', { id: 'chart-confidence', height: '220' })]));
-    chartsRow.appendChild(h('div', { class: 'kpi-card' }, [h('canvas', { id: 'chart-validation', height: '220' })]));
+    chartsRow.appendChild(h('div', { class: 'surface-card' }, [h('div', { style: 'height:220px;position:relative;' }, h('canvas', { id: 'chart-confidence' }))]));
+    chartsRow.appendChild(h('div', { class: 'surface-card' }, [h('div', { style: 'height:220px;position:relative;' }, h('canvas', { id: 'chart-validation' }))]));
     container.appendChild(chartsRow);
 
-    container.appendChild(sectionTitle('Validation by Module'));
-    const table = h('table', { class: 'data-table' });
-    table.appendChild(h('thead', {}, h('tr', {}, ['Module', 'Total', 'Verified', 'Pending 2nd Source', 'Unverified'].map((c) => h('th', {}, c)))));
-    const tbody = h('tbody', {});
+    container.appendChild(sectionTitle('fa-table-list', 'Validation by Module', `${Object.keys(data.by_module).length} modules`));
+    const gridCols = 'minmax(200px,1.8fr) minmax(70px,1fr) minmax(70px,1fr) minmax(120px,1fr) minmax(90px,1fr)';
+    const list = h('div', { class: 'record-list' });
+    const head = h('div', { class: 'record-list-head', style: `grid-template-columns:${gridCols};` });
+    ['Module', 'Total', 'Verified', 'Pending 2nd Src', 'Unverified'].forEach((label, i) => {
+      head.appendChild(h('div', { class: i === 0 ? '' : 'text-center' }, label));
+    });
+    list.appendChild(head);
     for (const [mod, stats] of Object.entries(data.by_module)) {
-      tbody.appendChild(h('tr', {}, [
-        h('td', { class: 'font-semibold' }, MODULE_LABEL_MAP[mod] || mod),
-        h('td', {}, String(stats.total)),
-        h('td', {}, String(stats.verified)),
-        h('td', {}, String(stats.pending_secondary)),
-        h('td', {}, String(stats.unverified)),
+      const row = h('div', { class: 'record-row', style: `grid-template-columns:${gridCols};cursor:default;` });
+      row.appendChild(h('div', { class: 'flex items-center gap-3 min-w-0' }, [
+        h('div', { class: 'record-avatar' }, initials(MODULE_LABEL_MAP[mod] || mod)),
+        h('div', { class: 'record-title truncate' }, MODULE_LABEL_MAP[mod] || mod),
       ]));
+      row.appendChild(h('div', { class: 'text-center record-field-value' }, String(stats.total)));
+      row.appendChild(h('div', { class: 'text-center record-field-value font-bold text-green-600' }, String(stats.verified)));
+      row.appendChild(h('div', { class: 'text-center record-field-value font-bold text-amber-600' }, String(stats.pending_secondary)));
+      row.appendChild(h('div', { class: 'text-center record-field-value font-bold text-rose-500' }, String(stats.unverified)));
+      list.appendChild(row);
     }
-    table.appendChild(tbody);
-    const wrap = h('div', { class: 'kpi-card overflow-x-auto' }, table);
-    container.appendChild(wrap);
+    container.appendChild(list);
 
     new Chart(document.getElementById('chart-confidence'), {
       type: 'pie',
