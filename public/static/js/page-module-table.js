@@ -63,11 +63,21 @@ function searchBox(onInput) {
   return input;
 }
 
+function sourceColLabel(fieldName) {
+  // "Company Announcement URL" -> "Company Announcement", "Credible Press Release URL" -> "Credible Press Release"
+  return (fieldName || 'Source').replace(/\s*URL$/i, '');
+}
+
 function buildDataTable(cols, rows, urlFields) {
+  const [primField, indField] = urlFields;
+  const primLabel = sourceColLabel(primField);
+  const indLabel = sourceColLabel(indField);
+
   const table = h('table', { class: 'data-table' });
   const thead = h('thead', {}, h('tr', {}, [
     ...cols.map((c) => h('th', {}, c)),
-    h('th', {}, 'Source'),
+    h('th', {}, primLabel || 'Primary Source'),
+    h('th', {}, indLabel || 'Independent Source'),
     h('th', {}, 'Confidence'),
   ]));
   table.appendChild(thead);
@@ -76,8 +86,11 @@ function buildDataTable(cols, rows, urlFields) {
     const meta = row.__meta || {};
     const tr = h('tr', {});
     cols.forEach((c) => tr.appendChild(h('td', {}, truncateCell(row[c]))));
-    tr.appendChild(h('td', {}, sourceLink(row[urlFields[0]] || meta.primary_source_url, 'Primary')));
-    tr.appendChild(h('td', {}, confidenceBadge(meta.confidence_level)));
+    const primUrl = row[primField] || meta.primary_source_url;
+    const indUrl = row[indField] || meta.independent_source_url;
+    tr.appendChild(h('td', {}, h('span', { html: sourceLink(primUrl, primLabel || 'Primary') })));
+    tr.appendChild(h('td', {}, h('span', { html: sourceLink(indUrl, indLabel || 'Independent') })));
+    tr.appendChild(h('td', {}, h('span', { html: confidenceBadge(meta.confidence_level) })));
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
