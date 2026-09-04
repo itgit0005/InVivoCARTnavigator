@@ -47,8 +47,8 @@ async function renderClinicalPage(container) {
       card.appendChild(h('div', { class: 'text-xs text-slate-600 mb-3' }, [h('strong', {}, 'Note: '), row['Notable Efficacy/Safety Note'] || '—']));
 
       card.appendChild(h('div', { class: 'flex items-center justify-between pt-2 border-t border-slate-100' }, [
-        h('span', { html: sourceLink(row['Company Announcement URL'], 'Announcement') }),
-        h('span', { html: sourceLink(row['Credible Press Release URL'], 'Press') }),
+        h('span', { html: sourceLink(row['Company Announcement URL'], 'Source 1') }),
+        h('span', { html: sourceLink(row['Credible Press Release URL'], 'Source 2') }),
       ]));
 
       grid.appendChild(card);

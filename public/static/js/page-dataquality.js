@@ -10,7 +10,7 @@ async function renderDataQualityPage(container) {
     container.appendChild(sectionTitle('Validation Status Across All Records'));
     container.appendChild(kpiGrid([
       { label: 'Total Records', value: t.totalRecords, icon: 'fa-database' },
-      { label: 'Verified (Primary + Independent)', value: t.verified, icon: 'fa-circle-check' },
+      { label: 'Verified (Source 1 + Source 2)', value: t.verified, icon: 'fa-circle-check' },
       { label: 'Pending Secondary Source', value: t.pendingSecondary, icon: 'fa-hourglass-half' },
       { label: 'Unverified', value: t.unverified, icon: 'fa-circle-question' },
     ]));

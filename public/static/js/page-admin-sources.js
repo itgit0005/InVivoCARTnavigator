@@ -14,7 +14,7 @@ async function renderAdminSourcesPage(container) {
     data.sources.forEach((s) => {
       tbody.appendChild(h('tr', {}, [
         h('td', {}, h('a', { href: s.url, target: '_blank', class: 'source-link' }, s.url)),
-        h('td', {}, h('span', { class: 'badge ' + (s.type === 'primary' ? 'badge-verified' : 'badge-pending') }, s.type)),
+        h('td', {}, h('span', { class: 'badge ' + (s.type === 'primary' ? 'badge-verified' : 'badge-pending') }, s.type === 'primary' ? 'Source 1' : 'Source 2')),
         h('td', { class: 'text-xs' }, s.modules.map((m) => MODULE_LABEL_MAP[m] || m).join(', ')),
       ]));
     });

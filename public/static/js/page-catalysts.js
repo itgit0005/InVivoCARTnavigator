@@ -27,8 +27,8 @@ async function renderCatalystPage(container) {
       card.appendChild(h('div', { class: 'text-sm text-slate-700 mb-2' }, row['Catalyst']));
       card.appendChild(h('div', { class: 'text-xs text-slate-500 mb-2' }, [h('strong', {}, 'Impact: '), row['Impact'] || '—']));
       card.appendChild(h('div', { class: 'flex items-center gap-3' }, [
-        h('span', { html: sourceLink(row['Company Announcement URL'], 'Announcement') }),
-        h('span', { html: sourceLink(row['Press Release URL'], 'Press') }),
+        h('span', { html: sourceLink(row['Company Announcement URL'], 'Source 1') }),
+        h('span', { html: sourceLink(row['Press Release URL'], 'Source 2') }),
       ]));
       item.appendChild(card);
       timeline.appendChild(item);

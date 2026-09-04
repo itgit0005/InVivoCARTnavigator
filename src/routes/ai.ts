@@ -21,8 +21,8 @@ function buildContextDocument(grouped: Record<string, any[]>): string {
         .map(([k, v]) => `${k}: ${v}`)
         .join(' | ');
       const srcParts: string[] = [];
-      if (__meta?.primary_source_url) srcParts.push(`Primary Source: ${__meta.primary_source_url}`);
-      if (__meta?.independent_source_url) srcParts.push(`Independent Source: ${__meta.independent_source_url}`);
+      if (__meta?.primary_source_url) srcParts.push(`Source 1: ${__meta.primary_source_url}`);
+      if (__meta?.independent_source_url) srcParts.push(`Source 2: ${__meta.independent_source_url}`);
       const src = srcParts.length ? ` [${srcParts.join(' | ')}]` : '';
       parts.push(`- ${line}${src}`);
     }
@@ -55,7 +55,7 @@ aiRoutes.post('/ask', async (c) => {
 Rules:
 - Only use facts present in the provided database context. Do not use outside knowledge or make up information.
 - If the database does not contain the answer, say so clearly — do not guess.
-- Always cite sources: include the exact Primary Source and/or Independent Source URL(s) shown next to the facts you used, inline in your answer or in a "Sources" section at the end.
+- Always cite sources: include the exact Source 1 and/or Source 2 URL(s) shown next to the facts you used, inline in your answer or in a "Sources" section at the end.
 - Do not present preliminary Phase 1 data as definitive efficacy; note small sample sizes where relevant.
 - Do not mark acquisitions as completed unless the record indicates closing was confirmed.
 - Do not make unsupported "largest/first/only/most advanced" claims beyond what the database explicitly states.
