@@ -83,11 +83,13 @@ sql.push(`INSERT INTO organizations (id, name) VALUES (1, 'Independent Analyst T
 
 // ---------------- Users ----------------
 // Passwords generated with PBKDF2-SHA256, 100000 iterations (see scripts/hash_password.mjs for reference)
+// Plaintext passwords (must match the hint shown on the login page):
+//   admin/Admin@2026!, demo/Demo@2026!, analyst/User@2026!, team/Team@2026!
 const users = [
-  { id: 1, username: 'admin',   email: 'admin@invivocart.demo',   role: 'super_admin', name: 'Platform Super Admin', hash: '8a85ab2cbe4fa286802c2e48988dfd6e6da6d55fd43b0a2783cfd35e7f5f3a46', salt: '7664bdb4bb7f6df05fb737022ea64ba0', org: 'NULL', can_upload: 1 },
-  { id: 2, username: 'demo',    email: 'demo@invivocart.demo',    role: 'demo',        name: 'Demo Viewer',          hash: '0cc38f8f9d3745e964a051ae7d3831fd0b16c4f269a6ed4b08997128c4bda1eb', salt: '5b041331e8ce2818c41e1406fe3b576c', org: 'NULL', can_upload: 0 },
-  { id: 3, username: 'analyst', email: 'analyst@invivocart.demo', role: 'single_user', name: 'Independent Analyst',  hash: 'a2f419186f468db9807dbe4e556cc5ae046fa780f714a7e16ad0d8a75d1442a9', salt: '1c127fd3ec31f7917786b68db22fe909', org: 'NULL', can_upload: 0 },
-  { id: 4, username: 'team',    email: 'team@invivocart.demo',    role: 'multi_user',  name: 'Team Member',          hash: 'f28da3cb4c8dc695b0934a8f64a4e640d43e3fbbf307d280112ad4ccb3cd7f88', salt: '79c37a4efc91307b401c4f4f5b81d052', org: '1',    can_upload: 0 },
+  { id: 1, username: 'admin',   email: 'admin@invivocart.demo',   role: 'super_admin', name: 'Platform Super Admin', hash: '0cac64c1adaf05b2ae20d966f92b38abf3e6e34bba27b2ca29c60233fa6cc452', salt: 'c00c5b9d884c4ad328167cabf8eba84a', org: 'NULL', can_upload: 1 },
+  { id: 2, username: 'demo',    email: 'demo@invivocart.demo',    role: 'demo',        name: 'Demo Viewer',          hash: '27db5b1c4c317f1a6e9636be629c3409c7df78fd0757b99b493ddef85a26f3fa', salt: '76b0f4749fafdb96ee154f723cfc784c', org: 'NULL', can_upload: 0 },
+  { id: 3, username: 'analyst', email: 'analyst@invivocart.demo', role: 'single_user', name: 'Independent Analyst',  hash: '3597f4c97dc530875332d86bb8f713ee86caebe8b87ddb9dd71efd432e3f7d67', salt: 'cdab253969f897da6f1f9f383c54c5d2', org: 'NULL', can_upload: 0 },
+  { id: 4, username: 'team',    email: 'team@invivocart.demo',    role: 'multi_user',  name: 'Team Member',          hash: '71f058d82c0f0e33b8f93df8128482a5ed38dad814448f00b8591aef523a3e0b', salt: '21c34107dfc94f1f22f773af0300ac5f', org: '1',    can_upload: 0 },
 ];
 for (const u of users) {
   sql.push(`INSERT INTO users (id, username, email, password_hash, password_salt, role, org_id, display_name, can_upload, can_export, is_active) VALUES (${u.id}, ${esc(u.username)}, ${esc(u.email)}, ${esc(u.hash)}, ${esc(u.salt)}, ${esc(u.role)}, ${u.org}, ${esc(u.name)}, ${u.can_upload}, 1, 1);`);
