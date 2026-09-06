@@ -1,20 +1,42 @@
-const NAV_ITEMS = [
-  { id: 'executive', label: 'Executive', icon: 'fa-chart-pie' },
-  { id: 'company_intelligence', label: 'Companies', icon: 'fa-building' },
-  { id: 'pipeline_dashboard', label: 'Pipeline', icon: 'fa-flask-vial' },
-  { id: 'clinical_intelligence', label: 'Clinical', icon: 'fa-stethoscope' },
-  { id: 'clinical_trial_dashboard', label: 'Trials', icon: 'fa-notes-medical' },
-  { id: 'target_landscape', label: 'Targets', icon: 'fa-bullseye' },
-  { id: 'technology_intelligence', label: 'Technology', icon: 'fa-microchip' },
-  { id: 'catalyst_dashboard', label: 'Catalysts', icon: 'fa-bolt' },
-  { id: 'bdl_intelligence', label: 'BD/M&A', icon: 'fa-handshake' },
-  { id: 'funding_investment', label: 'Funding', icon: 'fa-sack-dollar' },
-  { id: 'competitive_intelligence', label: 'Competitive Intel', icon: 'fa-chess' },
-  { id: 'regulatory_dashboard', label: 'Regulatory', icon: 'fa-gavel' },
-  { id: 'monthly_updates', label: 'Monthly Updates', icon: 'fa-calendar-days' },
-  { id: 'data_quality', label: 'Data Quality', icon: 'fa-shield-halved' },
-  { id: 'ai_analyst', label: 'AI Analyst', icon: 'fa-robot' },
+const NAV_GROUPS = [
+  {
+    label: 'Dashboards',
+    items: [
+      { id: 'executive', label: 'Executive', icon: 'fa-chart-pie' },
+      { id: 'monthly_updates', label: "What's New & Compare", icon: 'fa-calendar-days' },
+      { id: 'data_quality', label: 'Data Quality', icon: 'fa-shield-halved' },
+      { id: 'ai_analyst', label: 'AI Analyst', icon: 'fa-robot' },
+    ],
+  },
+  {
+    label: 'Intelligence',
+    items: [
+      { id: 'company_intelligence', label: 'Company Intelligence', icon: 'fa-building' },
+      { id: 'pipeline_dashboard', label: 'Pipeline Dashboard', icon: 'fa-flask-vial' },
+      { id: 'clinical_intelligence', label: 'Clinical Intelligence', icon: 'fa-stethoscope' },
+      { id: 'technology_intelligence', label: 'Technology Intelligence', icon: 'fa-microchip' },
+      { id: 'target_landscape', label: 'Target Antigen Landscape', icon: 'fa-bullseye' },
+    ],
+  },
+  {
+    label: 'Strategic & Financial',
+    items: [
+      { id: 'bdl_intelligence', label: 'BD&L Transactions', icon: 'fa-handshake' },
+      { id: 'funding_investment', label: 'Funding & Investment', icon: 'fa-sack-dollar' },
+      { id: 'competitive_intelligence', label: 'Competitive Benchmarking', icon: 'fa-chess' },
+    ],
+  },
+  {
+    label: 'Trials & Regulatory',
+    items: [
+      { id: 'clinical_trial_dashboard', label: 'Clinical Trial Registry', icon: 'fa-notes-medical' },
+      { id: 'catalyst_dashboard', label: 'Catalyst Timeline', icon: 'fa-bolt' },
+      { id: 'regulatory_dashboard', label: 'Regulatory Dashboard', icon: 'fa-gavel' },
+    ],
+  },
 ];
+
+const NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
 
 const ADMIN_NAV_ITEMS = [
   { id: 'admin_upload', label: 'Upload Monthly Update', icon: 'fa-cloud-arrow-up' },
@@ -43,18 +65,21 @@ function renderApp() {
     ]),
   ]));
 
-  const navScroll = h('div', { class: 'flex-1 overflow-y-auto px-3 py-4 space-y-0.5 scrollbar-thin' });
-  NAV_ITEMS.forEach((item) => {
-    const link = h('div', { class: 'nav-link' + (STATE.currentPage === item.id ? ' active' : '') }, [
-      h('i', { class: 'fa-solid ' + item.icon }),
-      item.label,
-    ]);
-    link.addEventListener('click', () => navigate(item.id));
-    navScroll.appendChild(link);
+  const navScroll = h('div', { class: 'flex-1 overflow-y-auto px-3 py-4 scrollbar-thin' });
+  NAV_GROUPS.forEach((group, gi) => {
+    navScroll.appendChild(h('div', { class: 'nav-group-label' + (gi === 0 ? ' first' : '') }, group.label));
+    group.items.forEach((item) => {
+      const link = h('div', { class: 'nav-link' + (STATE.currentPage === item.id ? ' active' : '') }, [
+        h('i', { class: 'fa-solid ' + item.icon }),
+        item.label,
+      ]);
+      link.addEventListener('click', () => navigate(item.id));
+      navScroll.appendChild(link);
+    });
   });
 
   if (isSuperAdmin()) {
-    navScroll.appendChild(h('div', { class: 'pt-4 pb-1 px-3 text-[10px] font-bold uppercase text-slate-500 tracking-wider' }, 'Super Admin'));
+    navScroll.appendChild(h('div', { class: 'nav-group-label' }, 'Super Admin'));
     ADMIN_NAV_ITEMS.forEach((item) => {
       const link = h('div', { class: 'nav-link' + (STATE.currentPage === item.id ? ' active' : '') }, [
         h('i', { class: 'fa-solid ' + item.icon }),
