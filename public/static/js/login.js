@@ -42,14 +42,6 @@ function renderLogin(root) {
   const form = h('div', {}, [usernameInput, passwordInput, submitBtn]);
   card.appendChild(form);
 
-  card.appendChild(h('div', { class: 'mt-6 pt-5 border-t border-slate-100 text-xs text-slate-500 space-y-1' }, [
-    h('div', { class: 'font-semibold text-slate-600 mb-1' }, 'Demo credentials'),
-    h('div', {}, 'Super Admin — admin / Admin@2026!'),
-    h('div', {}, 'Demo (read-only) — demo / Demo@2026!'),
-    h('div', {}, 'Single User — analyst / User@2026!'),
-    h('div', {}, 'Multi User — team / Team@2026!'),
-  ]));
-
   container.appendChild(card);
   root.appendChild(container);
 }
