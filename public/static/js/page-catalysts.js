@@ -3,6 +3,16 @@ async function renderCatalystPage(container) {
   try {
     const params = STATE.currentMonth ? { month: STATE.currentMonth } : {};
     const data = await API.get('/dashboards/module/catalyst_dashboard', params);
+
+    if (data.restricted) {
+      return renderDemoRestrictedPlaceholder(container, {
+        title: 'Catalyst Timeline',
+        icon: 'fa-bolt',
+        message: data.message,
+        version: data.version,
+      });
+    }
+
     container.innerHTML = '';
     container.appendChild(versionBanner(data.version));
 

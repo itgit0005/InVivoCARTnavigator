@@ -12,10 +12,20 @@ dashboardRoutes.use('*', requireAuth);
 // Demo tier gets a restricted subset of columns/rows on some sensitive modules — still real, verified data.
 const DEMO_ROW_LIMIT: Partial<Record<ModuleName, number>> = {
   company_intelligence: 8,
-  pipeline_dashboard: 10,
   bdl_intelligence: 5,
   funding_investment: 5,
 };
+
+// Demo tier has these sections fully locked: the nav entry stays visible/clickable,
+// but no underlying data is ever returned — just a "restricted" placeholder flag.
+const DEMO_HIDDEN_MODULES: ModuleName[] = [
+  'pipeline_dashboard',
+  'clinical_intelligence',
+  'competitive_intelligence',
+  'catalyst_dashboard',
+];
+
+const DEMO_RESTRICTED_MESSAGE = 'This section is not available on your Demo account. Upgrade to a full account to unlock live data.';
 
 function applyDemoLimits(user: AuthUser, module: ModuleName, rows: any[]) {
   if (user.role !== 'demo') return rows;
@@ -73,6 +83,10 @@ dashboardRoutes.get('/module/:module', async (c) => {
   const v = await resolveVersion(c);
   if (!v) return c.json({ error: 'No approved data version available.' }, 404);
 
+  if (user.role === 'demo' && DEMO_HIDDEN_MODULES.includes(module)) {
+    return c.json({ version: v, module, count: 0, rows: [], restricted: true, message: DEMO_RESTRICTED_MESSAGE });
+  }
+
   const records = await getRecordsForVersion(c.env.DB, v.id, module);
   const rows = applyDemoLimits(user, module, records.map((r) => ({ record_key: r.record_key, ...r.data })));
   return c.json({ version: v, module, count: rows.length, rows });
@@ -80,8 +94,20 @@ dashboardRoutes.get('/module/:module', async (c) => {
 
 // ---------- Data Quality dashboard ----------
 dashboardRoutes.get('/data-quality', async (c) => {
+  const user = c.get('user') as AuthUser;
   const v = await resolveVersion(c);
   if (!v) return c.json({ error: 'No approved data version available.' }, 404);
+
+  if (user.role === 'demo') {
+    return c.json({
+      version: v,
+      restricted: true,
+      message: DEMO_RESTRICTED_MESSAGE,
+      totals: { totalRecords: 0, verified: 0, pendingSecondary: 0, unverified: 0, highConf: 0, medConf: 0, lowConf: 0 },
+      by_module: {},
+    });
+  }
+
   const grouped = await getAllRecordsGroupedByModule(c.env.DB, v.id);
 
   let totalRecords = 0;

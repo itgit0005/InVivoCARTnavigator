@@ -65,6 +65,15 @@ async function renderModuleTablePage(container, module) {
   try {
     const params = STATE.currentMonth ? { month: STATE.currentMonth } : {};
     const data = await API.get(`/dashboards/module/${module}`, params);
+
+    if (data.restricted) {
+      return renderDemoRestrictedPlaceholder(container, {
+        title: MODULE_LABEL_MAP[module] || module,
+        message: data.message,
+        version: data.version,
+      });
+    }
+
     container.innerHTML = '';
 
     const v = data.version;

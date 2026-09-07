@@ -3,6 +3,16 @@ async function renderDataQualityPage(container) {
   try {
     const params = STATE.currentMonth ? { month: STATE.currentMonth } : {};
     const data = await API.get('/dashboards/data-quality', params);
+
+    if (data.restricted) {
+      return renderDemoRestrictedPlaceholder(container, {
+        title: 'Data Quality',
+        icon: 'fa-shield-halved',
+        message: data.message,
+        version: data.version,
+      });
+    }
+
     container.innerHTML = '';
     container.appendChild(versionBanner(data.version));
 

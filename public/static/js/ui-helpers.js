@@ -139,6 +139,29 @@ function openRecordDetailModal(opts) {
   document.body.appendChild(overlay);
 }
 
+// Friendly locked/restricted placeholder shown to Demo-role users on sections where the
+// menu entry stays visible & clickable, but the underlying data is fully hidden.
+function renderDemoRestrictedPlaceholder(container, opts) {
+  const { title, icon, message, version } = opts || {};
+  container.innerHTML = '';
+  if (version) container.appendChild(versionBanner(version));
+  container.appendChild(
+    h('div', { class: 'surface-card', style: 'text-align:center;padding:3.5rem 2rem;' }, [
+      h('div', {
+        class: 'mx-auto mb-4 flex items-center justify-center rounded-full',
+        style: 'width:4rem;height:4rem;background:#eef2ff;color:#4338ca;',
+      }, h('i', { class: 'fa-solid fa-lock', style: 'font-size:1.5rem;' })),
+      h('div', { class: 'text-base font-bold text-slate-800 mb-2' }, `${title || 'This section'} is locked on the Demo plan`),
+      h('div', { class: 'text-sm text-slate-500 max-w-md mx-auto' },
+        message || 'This section is not available on your Demo account. Upgrade to a full account to unlock live data.'),
+      h('div', { class: 'mt-5 inline-flex items-center gap-2 text-xs font-semibold text-indigo-600 bg-indigo-50 rounded-full px-4 py-2' }, [
+        h('i', { class: (icon || 'fa-shield-halved') + ' fa-solid' }),
+        'Contact your administrator to upgrade access',
+      ]),
+    ])
+  );
+}
+
 function downloadCsv(module, month) {
   const params = month ? `?month=${encodeURIComponent(month)}` : '';
   const url = `/api/export/${module}.csv${params}`;

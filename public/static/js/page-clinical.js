@@ -3,6 +3,16 @@ async function renderClinicalPage(container) {
   try {
     const params = STATE.currentMonth ? { month: STATE.currentMonth } : {};
     const data = await API.get('/dashboards/module/clinical_intelligence', params);
+
+    if (data.restricted) {
+      return renderDemoRestrictedPlaceholder(container, {
+        title: 'Clinical Intelligence',
+        icon: 'fa-stethoscope',
+        message: data.message,
+        version: data.version,
+      });
+    }
+
     container.innerHTML = '';
     container.appendChild(versionBanner(data.version));
 
