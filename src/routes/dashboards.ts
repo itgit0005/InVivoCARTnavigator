@@ -9,9 +9,9 @@ export const dashboardRoutes = new Hono<{ Bindings: Bindings; Variables: { user:
 
 dashboardRoutes.use('*', requireAuth);
 
-// Demo tier gets a restricted subset of columns/rows on some sensitive modules — still real, verified data.
+// Demo tier gets a restricted subset of rows on some sensitive modules — still real, verified data.
+// company_intelligence is intentionally NOT limited: demo sees all companies, just without export.
 const DEMO_ROW_LIMIT: Partial<Record<ModuleName, number>> = {
-  company_intelligence: 8,
   bdl_intelligence: 5,
   funding_investment: 5,
 };
