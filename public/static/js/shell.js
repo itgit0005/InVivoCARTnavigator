@@ -58,10 +58,7 @@ function renderApp() {
   sidebar.appendChild(h('div', { class: 'px-5 py-5 border-b border-white/10' }, [
     h('div', { class: 'flex items-center gap-2.5' }, [
       h('div', { class: 'w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0' }, h('i', { class: 'fa-solid fa-dna text-sm' })),
-      h('div', {}, [
-        h('div', { class: 'text-sm font-bold leading-tight' }, 'In Vivo CAR-T'),
-        h('div', { class: 'text-[10px] text-slate-400 leading-tight' }, 'Navigator'),
-      ]),
+      h('div', { class: 'text-sm font-bold leading-tight' }, 'In Vivo CAR-T Navigator'),
     ]),
   ]));
 
