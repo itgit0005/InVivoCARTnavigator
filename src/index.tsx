@@ -18,7 +18,7 @@ app.route('/api/admin', adminRoutes)
 app.route('/api/ai', aiRoutes)
 app.route('/api/export', exportRoutes)
 
-app.get('/api/health', (c) => c.json({ ok: true, service: 'InVivo CAR-T Intelligence Platform' }))
+app.get('/api/health', (c) => c.json({ ok: true, service: 'In Vivo CAR-T Navigator' }))
 
 app.use('/static/*', serveStatic({ root: './public' }))
 
@@ -27,7 +27,7 @@ const INDEX_HTML = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>In Vivo CAR-T Intelligence Platform</title>
+<title>In Vivo CAR-T Navigator</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">

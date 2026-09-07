@@ -23,6 +23,7 @@ const DEMO_HIDDEN_MODULES: ModuleName[] = [
   'clinical_intelligence',
   'competitive_intelligence',
   'catalyst_dashboard',
+  'clinical_trial_dashboard',
 ];
 
 const DEMO_RESTRICTED_MESSAGE = 'This section is not available on your Demo account. Upgrade to a full account to unlock live data.';

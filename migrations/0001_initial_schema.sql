@@ -1,5 +1,5 @@
 -- ============================================================
--- In Vivo CAR-T Intelligence Platform — Initial Schema
+-- In Vivo CAR-T Navigator — Initial Schema
 -- ============================================================
 
 -- Organizations (for Multi User tier)

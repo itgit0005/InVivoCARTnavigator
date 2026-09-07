@@ -12,7 +12,7 @@ async function renderExecutivePage(container) {
     const hero = h('div', { class: 'hero-banner' });
     const heroContent = h('div', { class: 'hero-content flex items-start justify-between flex-wrap gap-4' });
     heroContent.appendChild(h('div', {}, [
-      h('div', { class: 'hero-eyebrow' }, 'In Vivo CAR-T Intelligence Platform'),
+      h('div', { class: 'hero-eyebrow' }, 'In Vivo CAR-T Navigator'),
       h('div', { class: 'hero-title' }, 'Executive Overview'),
       h('div', { class: 'hero-sub' }, [
         h('i', { class: 'fa-regular fa-calendar mr-1.5' }),

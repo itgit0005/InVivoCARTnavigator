@@ -74,7 +74,7 @@ const MODULE_LABEL_MAP = {
   clinical_intelligence: 'Clinical Intelligence',
   technology_intelligence: 'Technology Intelligence',
   target_landscape: 'Target Landscape',
-  clinical_trial_dashboard: 'Clinical Trial Dashboard',
+  clinical_trial_dashboard: 'Clinical Trial Registry',
   catalyst_dashboard: 'Catalyst Dashboard',
   bdl_intelligence: 'BD&L Intelligence',
   funding_investment: 'Funding & Investment',

@@ -6,7 +6,7 @@ function renderLogin(root) {
 
   card.appendChild(h('div', { class: 'text-center mb-6' }, [
     h('div', { class: 'w-14 h-14 rounded-xl bg-blue-600 mx-auto flex items-center justify-center mb-3' }, h('i', { class: 'fa-solid fa-dna text-white text-2xl' })),
-    h('h1', { class: 'text-xl font-extrabold text-slate-900' }, 'In Vivo CAR-T Intelligence Platform'),
+    h('h1', { class: 'text-xl font-extrabold text-slate-900' }, 'In Vivo CAR-T Navigator'),
     h('p', { class: 'text-sm text-slate-500 mt-1' }, 'Sign in to access verified competitive intelligence'),
   ]));
 

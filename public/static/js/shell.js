@@ -60,7 +60,7 @@ function renderApp() {
       h('div', { class: 'w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0' }, h('i', { class: 'fa-solid fa-dna text-sm' })),
       h('div', {}, [
         h('div', { class: 'text-sm font-bold leading-tight' }, 'In Vivo CAR-T'),
-        h('div', { class: 'text-[10px] text-slate-400 leading-tight' }, 'Intelligence Platform'),
+        h('div', { class: 'text-[10px] text-slate-400 leading-tight' }, 'Navigator'),
       ]),
     ]),
   ]));

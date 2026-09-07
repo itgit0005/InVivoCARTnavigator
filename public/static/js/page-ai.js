@@ -59,5 +59,5 @@ async function renderAiAnalystPage(container) {
   sendBtn.addEventListener('click', send);
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
 
-  addBubble('Hi! I am the AI Analyst for the In Vivo CAR-T Intelligence Platform. Ask me anything about the tracked companies, assets, trials, deals, or targets — I will answer only from verified platform data and cite sources.', 'ai');
+  addBubble('Hi! I am the AI Analyst for the In Vivo CAR-T Navigator. Ask me anything about the tracked companies, assets, trials, deals, or targets — I will answer only from verified platform data and cite sources.', 'ai');
 }
