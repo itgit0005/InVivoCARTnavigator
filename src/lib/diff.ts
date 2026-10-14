@@ -1,4 +1,4 @@
-import { MODULE_KEY_FIELDS, MODULES, type ModuleName } from './types';
+import { MODULE_KEY_FIELDS, MODULE_URL_FIELDS, MODULE_DATE_FIELDS, MODULES, type ModuleName } from './types';
 import type { ParsedModuleData } from './parser';
 
 export interface DiffEntry {
@@ -17,6 +17,44 @@ export interface DiffSummary {
 export function buildRecordKey(module: ModuleName, row: Record<string, any>): string {
   const fields = MODULE_KEY_FIELDS[module];
   return fields.map((f) => String(row[f] ?? '').trim()).join('|');
+}
+
+function isUrlDisclosed(v: any): boolean {
+  if (!v) return false;
+  const s = String(v).trim();
+  if (!s) return false;
+  if (/^undisclosed$/i.test(s)) return false;
+  return true;
+}
+
+export interface RecordSourceMeta {
+  confidence_level: 'High' | 'Medium' | 'Low';
+  validation_status: 'Verified' | 'Pending Secondary Source' | 'Unverified';
+  primary_source_url: string | null;
+  independent_source_url: string | null;
+  source_date: string | null;
+}
+
+// Derives confidence/validation/source fields straight from the row's own source-URL columns —
+// same rule used when the seed dataset was generated (scripts/gen_seed_sql.mjs): both sources
+// disclosed => Verified/High; one disclosed => Pending Secondary Source/Medium; neither => Unverified/Low.
+export function deriveRecordSourceMeta(module: ModuleName, row: Record<string, any>): RecordSourceMeta {
+  const [primField, indField] = MODULE_URL_FIELDS[module];
+  const primUrl = isUrlDisclosed(row[primField]) ? String(row[primField]) : null;
+  const indUrl = isUrlDisclosed(row[indField]) ? String(row[indField]) : null;
+  const hasPrim = !!primUrl;
+  const hasInd = !!indUrl;
+
+  let validation_status: RecordSourceMeta['validation_status'];
+  let confidence_level: RecordSourceMeta['confidence_level'];
+  if (hasPrim && hasInd) { validation_status = 'Verified'; confidence_level = 'High'; }
+  else if (hasPrim || hasInd) { validation_status = 'Pending Secondary Source'; confidence_level = 'Medium'; }
+  else { validation_status = 'Unverified'; confidence_level = 'Low'; }
+
+  const dateField = MODULE_DATE_FIELDS[module];
+  const source_date = dateField ? (row[dateField] ?? null) : null;
+
+  return { confidence_level, validation_status, primary_source_url: primUrl, independent_source_url: indUrl, source_date };
 }
 
 function normalizeValue(v: any): string {

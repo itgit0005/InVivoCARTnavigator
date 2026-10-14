@@ -3,7 +3,7 @@ import type { Bindings, AuthUser, ModuleName } from '../lib/types';
 import { MODULES } from '../lib/types';
 import { requireAuth, requireSuperAdmin } from '../lib/middleware';
 import { parseWorkbookBuffer, parseCsvBuffer, guessModuleFromFilename } from '../lib/parser';
-import { diffAgainstBaseline, buildRecordKey } from '../lib/diff';
+import { diffAgainstBaseline, buildRecordKey, deriveRecordSourceMeta } from '../lib/diff';
 import { getLiveVersion, getAllRecordsGroupedByModule, getVersionById, listApprovedVersionsForMonth } from '../lib/data';
 import { hashPassword, logAudit } from '../lib/auth';
 
@@ -105,12 +105,26 @@ adminRoutes.post('/upload', async (c) => {
       if (!key || key.replace(/\|/g, '').trim() === '') continue;
       const entry = entries.find((e) => e.module === mod && e.record_key === key && e.next === row);
       const changeType = entry?.change_type || 'new';
+      const meta = deriveRecordSourceMeta(mod, row);
       stmts.push(
         db
           .prepare(
-            `INSERT INTO records (version_id, module, record_key, data_json, row_order, change_type) VALUES (?, ?, ?, ?, ?, ?)`
+            `INSERT INTO records (version_id, module, record_key, data_json, row_order, change_type, confidence_level, validation_status, primary_source_url, independent_source_url, source_date, verification_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
           )
-          .bind(versionId, mod, key, JSON.stringify(row), rowOrderCounters[mod]++, changeType)
+          .bind(
+            versionId,
+            mod,
+            key,
+            JSON.stringify(row),
+            rowOrderCounters[mod]++,
+            changeType,
+            meta.confidence_level,
+            meta.validation_status,
+            meta.primary_source_url,
+            meta.independent_source_url,
+            meta.source_date,
+            cutoffDate
+          )
       );
     }
   }

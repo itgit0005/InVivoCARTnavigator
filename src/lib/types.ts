@@ -47,6 +47,37 @@ export const MODULE_KEY_FIELDS: Record<ModuleName, string[]> = {
   regulatory_dashboard: ['Company / Asset', 'Designation / Interaction', 'Date'],
 };
 
+// Primary/independent source URL field names as they appear in the uploaded sheet columns
+// (varies slightly by module — catalyst_dashboard uses "Press Release URL" instead of "Credible Press Release URL").
+export const MODULE_URL_FIELDS: Record<ModuleName, [string, string]> = {
+  company_intelligence: ['Company Announcement URL', 'Credible Press Release URL'],
+  pipeline_dashboard: ['Company Announcement URL', 'Credible Press Release URL'],
+  clinical_intelligence: ['Company Announcement URL', 'Credible Press Release URL'],
+  technology_intelligence: ['Company Announcement URL', 'Credible Press Release URL'],
+  target_landscape: ['Company Announcement URL', 'Credible Press Release URL'],
+  clinical_trial_dashboard: ['Company Announcement URL', 'Credible Press Release URL'],
+  catalyst_dashboard: ['Company Announcement URL', 'Press Release URL'],
+  bdl_intelligence: ['Company Announcement URL', 'Credible Press Release URL'],
+  funding_investment: ['Company Announcement URL', 'Credible Press Release URL'],
+  competitive_intelligence: ['Company Announcement URL', 'Credible Press Release URL'],
+  regulatory_dashboard: ['Company Announcement URL', 'Credible Press Release URL'],
+};
+
+// Column used as the source_date for each module (null = no dedicated date column).
+export const MODULE_DATE_FIELDS: Record<ModuleName, string | null> = {
+  company_intelligence: null,
+  pipeline_dashboard: null,
+  clinical_intelligence: null,
+  technology_intelligence: null,
+  target_landscape: null,
+  clinical_trial_dashboard: null,
+  catalyst_dashboard: 'Date',
+  bdl_intelligence: 'Announcement Date',
+  funding_investment: 'Date',
+  competitive_intelligence: null,
+  regulatory_dashboard: 'Date',
+};
+
 export const MODULE_LABELS: Record<ModuleName, string> = {
   company_intelligence: 'Company Intelligence',
   pipeline_dashboard: 'Pipeline Dashboard',
