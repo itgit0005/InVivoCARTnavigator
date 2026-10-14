@@ -33,6 +33,9 @@ function buildContextDocument(grouped: Record<string, any[]>): string {
 aiRoutes.post('/ask', async (c) => {
   const db = c.env.DB;
   const user = c.get('user') as AuthUser;
+  if (user.role === 'demo') {
+    return c.json({ error: 'AI Analyst is not available on your Demo account. Upgrade to a full account to unlock this feature.' }, 403);
+  }
   const body = await c.req.json<{ question: string; month?: string }>().catch(() => null);
   if (!body?.question?.trim()) return c.json({ error: 'A question is required.' }, 400);
 

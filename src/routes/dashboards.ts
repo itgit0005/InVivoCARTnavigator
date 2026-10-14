@@ -141,6 +141,10 @@ dashboardRoutes.get('/data-quality', async (c) => {
 
 // ---------- Historical comparison: compare two approved months ----------
 dashboardRoutes.get('/compare', async (c) => {
+  const user = c.get('user') as AuthUser;
+  if (user.role === 'demo') {
+    return c.json({ restricted: true, message: DEMO_RESTRICTED_MESSAGE }, 403);
+  }
   const monthA = c.req.query('month_a');
   const monthB = c.req.query('month_b');
   if (!monthA || !monthB) return c.json({ error: 'month_a and month_b are required.' }, 400);

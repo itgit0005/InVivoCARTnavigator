@@ -3,9 +3,9 @@ const NAV_GROUPS = [
     label: 'Dashboards',
     items: [
       { id: 'executive', label: 'Executive', icon: 'fa-chart-pie' },
-      { id: 'monthly_updates', label: "What's New & Compare", icon: 'fa-calendar-days' },
-      { id: 'data_quality', label: 'Data Quality', icon: 'fa-shield-halved' },
-      { id: 'ai_analyst', label: 'AI Analyst', icon: 'fa-robot' },
+      { id: 'monthly_updates', label: "What's New & Compare", icon: 'fa-calendar-days', hideForDemo: true },
+      { id: 'data_quality', label: 'Data Quality', icon: 'fa-shield-halved', hideForDemo: true },
+      { id: 'ai_analyst', label: 'AI Analyst', icon: 'fa-robot', hideForDemo: true },
     ],
   },
   {
@@ -38,6 +38,13 @@ const NAV_GROUPS = [
 
 const NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
 
+// Nav items hidden entirely (not just data-restricted) from the Demo role.
+const DEMO_HIDDEN_NAV_IDS = new Set(NAV_ITEMS.filter((i) => i.hideForDemo).map((i) => i.id));
+
+function visibleNavItems(items) {
+  return isDemo() ? items.filter((i) => !i.hideForDemo) : items;
+}
+
 const ADMIN_NAV_ITEMS = [
   { id: 'admin_upload', label: 'Upload Monthly Update', icon: 'fa-cloud-arrow-up' },
   { id: 'admin_review', label: 'Review & Approve', icon: 'fa-clipboard-check' },
@@ -63,9 +70,13 @@ function renderApp() {
   ]));
 
   const navScroll = h('div', { class: 'flex-1 overflow-y-auto px-3 py-4 scrollbar-thin' });
-  NAV_GROUPS.forEach((group, gi) => {
-    navScroll.appendChild(h('div', { class: 'nav-group-label' + (gi === 0 ? ' first' : '') }, group.label));
-    group.items.forEach((item) => {
+  let firstGroupRendered = false;
+  NAV_GROUPS.forEach((group) => {
+    const items = visibleNavItems(group.items);
+    if (items.length === 0) return;
+    navScroll.appendChild(h('div', { class: 'nav-group-label' + (!firstGroupRendered ? ' first' : '') }, group.label));
+    firstGroupRendered = true;
+    items.forEach((item) => {
       const link = h('div', { class: 'nav-link' + (STATE.currentPage === item.id ? ' active' : '') }, [
         h('i', { class: 'fa-solid ' + item.icon }),
         item.label,
@@ -154,6 +165,6 @@ function doLogout() {
 }
 
 function navigate(pageId) {
-  STATE.currentPage = pageId;
+  STATE.currentPage = isDemo() && DEMO_HIDDEN_NAV_IDS.has(pageId) ? 'executive' : pageId;
   renderApp();
 }
