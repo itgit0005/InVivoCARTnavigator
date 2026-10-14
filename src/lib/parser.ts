@@ -2,7 +2,7 @@
 // sheet-name -> module mapping and header row conventions as the original workbook.
 import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
-import { MODULES, type ModuleName } from './types';
+import { MODULES, MODULE_URL_FIELDS, type ModuleName } from './types';
 
 const SHEET_TO_MODULE: Record<string, ModuleName> = {
   'Company Intelligence': 'company_intelligence',
@@ -53,11 +53,65 @@ function cleanCell(v: any): any {
   return v;
 }
 
+// ------------------------------------------------------------------
+// Header normalization — monthly source workbooks are hand-maintained and the
+// source-URL column labels drift slightly between editions (e.g. the Oct 2026
+// template switched "Company Announcement URL" -> "Company Announcement (URL)"
+// and dropped the "Credible " prefix on several sheets' second URL column:
+// "Credible Press Release URL" -> "Press Release (URL)"). If a row's key for
+// these columns doesn't exactly match MODULE_URL_FIELDS, the app's diff engine,
+// Manage Sources page, module tables, and AI Analyst all silently treat the
+// source as absent — even though the uploaded data has a real URL. We fix this
+// once here, at parse time, so every column ends up using the canonical field
+// name the rest of the app already relies on, regardless of which edition of
+// the template was uploaded.
+function stripUrlParens(h: string): string {
+  // "Foo (URL)" / "Foo( Url )" / "Foo  (url)" -> "Foo URL"
+  return h
+    .replace(/\s*\(\s*url\s*\)\s*$/i, ' URL')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function stripCrediblePrefix(h: string): string {
+  return h.replace(/^credible\s+/i, '').trim().toLowerCase();
+}
+
+/** Normalizes a header row's cell text for consistent matching, independent of module. */
+function normalizeHeaderRow(headerRow: string[]): string[] {
+  return headerRow.map((h) => (h ? stripUrlParens(h) : h));
+}
+
+/**
+ * Re-maps normalized headers onto the exact canonical column names in
+ * MODULE_URL_FIELDS for the given module, tolerating a missing/extra
+ * "Credible " prefix on the secondary (independent) source column.
+ */
+function resolveUrlFieldAliases(module: ModuleName | null, headerRow: string[]): string[] {
+  const urlFields = module ? MODULE_URL_FIELDS[module] : null;
+  if (!urlFields) return headerRow;
+  const [primField, indField] = urlFields;
+  return headerRow.map((h) => {
+    if (!h) return h;
+    const lower = h.toLowerCase();
+    if (lower === primField.toLowerCase()) return primField;
+    if (lower === indField.toLowerCase()) return indField;
+    // Tolerate the "Credible " prefix being present/absent/renamed on either side
+    if (stripCredible(h) === stripCredible(indField)) return indField;
+    if (stripCredible(h) === stripCredible(primField)) return primField;
+    return h;
+  });
+  function stripCredible(s: string) {
+    return stripCrediblePrefix(s);
+  }
+}
+
 /** Parses one worksheet using the workbook convention: title(row1), subtitle(row2), blank(row3), headers(row4), data(row5+) */
-function parseSheet(ws: XLSX.WorkSheet): Record<string, any>[] {
+function parseSheet(ws: XLSX.WorkSheet, module: ModuleName | null): Record<string, any>[] {
   const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null });
   if (rows.length < 4) return [];
-  const headerRow = rows[3].map((h) => (h === null || h === undefined ? '' : String(h).trim()));
+  let headerRow = rows[3].map((h) => (h === null || h === undefined ? '' : String(h).trim()));
+  headerRow = resolveUrlFieldAliases(module, normalizeHeaderRow(headerRow));
   const dataRows = rows.slice(4);
   const out: Record<string, any>[] = [];
   let section: string | null = null;
@@ -90,7 +144,7 @@ export function parseWorkbookBuffer(buf: ArrayBuffer): ParsedModuleData {
     const mod = SHEET_TO_MODULE[sheetName.trim()];
     if (!mod) continue;
     const ws = wb.Sheets[sheetName];
-    result[mod] = parseSheet(ws);
+    result[mod] = parseSheet(ws, mod);
   }
   return result;
 }
@@ -100,7 +154,11 @@ export function parseCsvBuffer(text: string, moduleHint: ModuleName | null): Par
   const rows = parsed.data as any[][];
   if (rows.length < 1) return {};
   // CSV convention: header row is the first row (simplified — no title/subtitle rows expected in a CSV export)
-  const headerRow = rows[0].map((h) => (h === null || h === undefined ? '' : String(h).trim()));
+  const rawHeaderRow = rows[0].map((h) => (h === null || h === undefined ? '' : String(h).trim()));
+  const mod = moduleHint || guessModuleFromHeaders(rawHeaderRow);
+  if (!mod) return {};
+  // Normalize source-URL column name drift (see parseSheet) before mapping cells to field names.
+  const headerRow = resolveUrlFieldAliases(mod, normalizeHeaderRow(rawHeaderRow));
   const dataRows = rows.slice(1);
   const out: Record<string, any>[] = [];
   for (const r of dataRows) {
@@ -113,8 +171,6 @@ export function parseCsvBuffer(text: string, moduleHint: ModuleName | null): Par
     });
     if (Object.values(obj).some((v) => v !== null && v !== undefined && v !== '')) out.push(obj);
   }
-  const mod = moduleHint || guessModuleFromHeaders(headerRow);
-  if (!mod) return {};
   return { [mod]: out };
 }
 
