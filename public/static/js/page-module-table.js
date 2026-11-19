@@ -143,7 +143,12 @@ function buildRecordList(module, cfg, cols, rows, urlFields) {
   const titleField = cfg.title || cols[0];
   const subtitleField = cfg.subtitle || cols[1];
   const keyFields = cfg.keyFields || cols.slice(2, 5);
-  const gridCols = `minmax(200px,1.5fr) ${keyFields.map(() => 'minmax(110px,1fr)').join(' ')} auto auto 1.25rem`;
+  // Fixed widths for the Stage/badge and Confidence columns (instead of `auto`) so every
+  // row's grid lines up identically — each .record-row is its own grid container, so an
+  // `auto` track sizes to THAT row's own content, letting variable-length stage text
+  // (e.g. "Approved" vs "Preclinical / Discovery") shift the Confidence/chevron columns
+  // out of alignment row-to-row.
+  const gridCols = `minmax(200px,1.5fr) ${keyFields.map(() => 'minmax(110px,1fr)').join(' ')} 150px 104px 1.25rem`;
 
   const list = h('div', { class: 'record-list' });
 
